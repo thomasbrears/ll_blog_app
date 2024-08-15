@@ -1,0 +1,3 @@
+includes:
+  - prod.yaml
+runtime: nodejs20
