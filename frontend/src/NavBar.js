@@ -6,6 +6,14 @@ const NavBar = () => {
     const { user } = useUser();
     const navigate = useNavigate();
 
+    const handleLogout = () => {
+        signOut(getAuth()).then(() => {
+            navigate('/');
+        }).catch(error => {
+            console.error("Error signing out:", error);
+        });
+    };
+
     return (
         <nav>
             <ul>
@@ -18,15 +26,14 @@ const NavBar = () => {
                 <li>
                     <Link to="/articles">Articles</Link>
                 </li>
+                <li>
+                    <Link to="/dashboard">Dashboard</Link>
+                </li>
             </ul>
             <div className="nav-right">
                 {user
-                    ? <button onClick={() => {
-                        signOut(getAuth());
-                    }}>Log Out</button>
-                    : <button onClick={() => {
-                        navigate('/login');
-                    }}>Log In</button>}
+                    ? <button onClick={handleLogout}>Log Out</button>
+                    : <button onClick={() => navigate('/login')}>Log In</button>}
             </div>
         </nav>
     );

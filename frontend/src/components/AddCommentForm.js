@@ -3,29 +3,31 @@ import axios from 'axios';
 import useUser from '../hooks/useUser';
 
 const AddCommentForm = ({ articleName, onArticleUpdated }) => {
-    const [name, setName] = useState('');
     const [commentText, setCommentText] = useState('');
     const { user } = useUser();
 
     const addComment = async () => {
         const token = user && await user.getIdToken();
         const headers = token ? { authtoken: token } : {};
+
+        // Ensure displayName is used, fallback to email if displayName is not available
+        const postedBy = user.displayName || user.email;
+
         const response = await axios.post(`/api/articles/${articleName}/comments`, {
-            postedBy: name,
+            postedBy: postedBy,
             text: commentText,
         }, {
             headers,
         });
         const updatedArticle = response.data;
         onArticleUpdated(updatedArticle);
-        setName('');
-        setCommentText('');
+        setCommentText(''); // Clear the comment field after posting
     }
 
     return (
         <div id="add-comment-form">
             <h3>Add a Comment</h3>
-            {user && <p>You are posting as {user.email}</p>}
+            {user && <p>You are posting as {user.displayName || user.email}</p>}
             <textarea
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
