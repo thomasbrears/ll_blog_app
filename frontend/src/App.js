@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import useUser from './hooks/useUser';
+import CreateArticlePage from './pages/CreateArticlePage';
 
 function App() {
   const { user, isLoading } = useUser();
@@ -31,6 +32,12 @@ function App() {
             <Route path="/create-account" element={<CreateAccountPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             
+            {/* Protected Route for Create Article */}
+            <Route 
+              path="/create-article" 
+              element={user ? <CreateArticlePage /> : <Navigate to="/login" state={{ from: '/create-article' }} />} 
+            />
+
             {/* Protected Route for Dashboard */}
             <Route 
               path="/dashboard" 

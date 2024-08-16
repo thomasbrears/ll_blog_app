@@ -29,6 +29,9 @@ const NavBar = () => {
                 <li>
                     <Link to="/dashboard">Dashboard</Link>
                 </li>
+                <li>
+                    <Link to="/create-article">Create New Article</Link>
+                </li>
             </ul>
             <div className="nav-right">
                 {user

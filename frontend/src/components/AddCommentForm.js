@@ -7,21 +7,21 @@ const AddCommentForm = ({ articleName, onArticleUpdated }) => {
     const { user } = useUser();
 
     const addComment = async () => {
-        const token = user && await user.getIdToken();
-        const headers = token ? { authtoken: token } : {};
+        try {
+            const token = user && await user.getIdToken();
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // Ensure displayName is used, fallback to email if displayName is not available
-        const postedBy = user.displayName || user.email;
+            const response = await axios.post(`/api/articles/${articleName}/comments`, {
+                text: commentText,
+            }, { headers });
 
-        const response = await axios.post(`/api/articles/${articleName}/comments`, {
-            postedBy: postedBy,
-            text: commentText,
-        }, {
-            headers,
-        });
-        const updatedArticle = response.data;
-        onArticleUpdated(updatedArticle);
-        setCommentText(''); // Clear the comment field after posting
+            const updatedArticle = response.data;
+            onArticleUpdated(updatedArticle);
+            setCommentText(''); // Clear the comment field after posting
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            // Optionally, you can handle the error in the UI, e.g., show an error message.
+        }
     }
 
     return (

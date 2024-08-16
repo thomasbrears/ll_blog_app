@@ -5,22 +5,52 @@ import NotFoundPage from './NotFoundPage';
 import CommentsList from '../components/CommentsList';
 import AddCommentForm from '../components/AddCommentForm';
 import useUser from '../hooks/useUser';
-import articles from './article-content';
+import { getAuth } from 'firebase/auth';
 
 const ArticlePage = () => {
-    const [articleInfo, setArticleInfo] = useState({ upvotes: 0, comments: [], canUpvote: false });
-    const { canUpvote } = articleInfo;
+    const [articleInfo, setArticleInfo] = useState({
+        upvotes: 0,
+        comments: [],
+        canUpvote: false,
+        content: [],
+        createdAt: '',
+        createdByUid: ''
+    });
+    const [authorName, setAuthorName] = useState('Unknown');
+    const { canUpvote, content, createdAt } = articleInfo;
     const { articleId } = useParams();
     const { user, isLoading } = useUser();
 
     useEffect(() => {
         const loadArticleInfo = async () => {
             try {
-                const token = user && await user.getIdToken(); // Get the auth token
+                const token = user ? await user.getIdToken() : null; // Get the auth token if the user is logged in
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
                 const response = await axios.get(`/api/articles/${articleId}`, { headers });
-                setArticleInfo(response.data);
+                const articleData = response.data;
+
+                // Ensure that content is an array
+                if (typeof articleData.content === 'string') {
+                    articleData.content = [articleData.content];
+                }
+
+                setArticleInfo(articleData);
+
+                // Fetch the author's display name using the createdByUid
+                if (articleData.createdByUid) {
+                    const auth = getAuth();
+                    const currentUser = auth.currentUser;
+
+                    // Check if the author is the current user
+                    if (currentUser && currentUser.uid === articleData.createdByUid) {
+                        setAuthorName(currentUser.displayName || currentUser.email);
+                    } else {
+                        // Fetch the author's display name via backend
+                        const userResponse = await axios.get(`/api/users/${articleData.createdByUid}`);
+                        setAuthorName(userResponse.data.displayName || 'Unknown');
+                    }
+                }
             } catch (error) {
                 console.error('Error fetching article:', error);
             }
@@ -30,8 +60,6 @@ const ArticlePage = () => {
             loadArticleInfo();
         }
     }, [isLoading, user, articleId]);
-
-    const article = articles.find(article => article.name === articleId);
 
     const addUpvote = async () => {
         try {
@@ -45,30 +73,47 @@ const ArticlePage = () => {
         }
     };
 
-    if (!article) {
+    if (!articleInfo) {
         return <NotFoundPage />;
     }
 
     return (
         <>
-            <h1>{article.title}</h1>
+            <h1>{articleInfo.title}</h1>
             <div className="upvotes-section">
-                {user
-                    ? <button onClick={addUpvote}>{canUpvote ? 'Upvote' : 'Already Upvoted'}</button>
-                    : <button>Log in to upvote</button>}
+                <p>
+                    {authorName && createdAt ? (
+                        `Created by ${authorName} on ${new Date(createdAt).toLocaleString()}`
+                    ) : (
+                        'Creator information unavailable'
+                    )}
+                </p>
+                <br />
+                {user ? (
+                    <button onClick={addUpvote}>{canUpvote ? 'Upvote' : 'Already Upvoted'}</button>
+                ) : (
+                    <button>Log in to upvote</button>
+                )}
                 <p>This article has {articleInfo.upvotes} upvote(s)</p>
             </div>
-            {article.content.map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-            ))}
-            {user
-                ? <AddCommentForm
+            {content && Array.isArray(content) ? (
+                content.map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                ))
+            ) : (
+                <p>No content available...</p>
+            )}
+            {user ? (
+                <AddCommentForm
                     articleName={articleId}
-                    onArticleUpdated={updatedArticle => setArticleInfo(updatedArticle)} />
-                : <button>Log in to add a comment</button>}
+                    onArticleUpdated={(updatedArticle) => setArticleInfo(updatedArticle)}
+                />
+            ) : (
+                <button>Log in to add a comment</button>
+            )}
             <CommentsList comments={articleInfo.comments} />
         </>
-    );
+    );    
 };
 
 export default ArticlePage;

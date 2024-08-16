@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
+import { Link } from 'react-router-dom';
 
 const ViewComments = ({ user }) => {
     const [comments, setComments] = useState([]);
@@ -38,7 +39,17 @@ const ViewComments = ({ user }) => {
                 <ul>
                     {comments.map((comment, index) => (
                         <li key={index}>
-                            <strong>{comment.articleName || "Unknown Article"}:</strong> {comment.text}
+                            <p>
+                                <strong>Article: </strong> 
+                                <Link to={`/articles/${comment.articleName}`}>
+                                    {comment.articleName || "Unknown Article"}
+                                </Link>
+                                {comment.timestamp && (
+                                    <span> ({new Date(comment.timestamp).toLocaleString()})</span>
+                                )}
+                                <br />
+                                <strong>Comment:</strong> {comment.text}
+                            </p>
                         </li>
                     ))}
                 </ul>

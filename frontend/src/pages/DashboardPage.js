@@ -4,6 +4,7 @@ import ChangeName from '../components/ChangeName';
 import ChangePassword from '../components/ChangePassword';
 import ViewUpvotedArticles from '../components/ViewUpvotedArticles';
 import ViewComments from '../components/ViewComments';
+import ViewUserArticles from '../components/ViewUserArticles';
 
 const DashboardPage = () => {
     const [user, setUser] = useState(null);
@@ -39,7 +40,10 @@ const DashboardPage = () => {
 
                     <div>
                         <h2>Your Activity</h2>
+                        <ViewUserArticles user={user} />
+                        <br />
                         <ViewUpvotedArticles user={user} />
+                        <br />
                         <ViewComments user={user} />
                     </div>
                 </div>
